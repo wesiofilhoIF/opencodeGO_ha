@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import openai
 from openai.types.chat import (
     ChatCompletionAssistantMessageParam,
-    ChatCompletionContentPartImageParam,
+    ChatCompletionContentPartParam,
     ChatCompletionFunctionToolParam,
     ChatCompletionMessage,
     ChatCompletionMessageFunctionToolCallParam,
@@ -54,6 +54,9 @@ def _adjust_schema(schema: dict[str, Any]) -> None:
 
         if "required" not in schema:
             schema["required"] = []
+
+        # Strict mode requires every object to forbid extra properties
+        schema["additionalProperties"] = False
 
         for prop, prop_info in schema["properties"].items():
             _adjust_schema(prop_info)
@@ -183,14 +186,14 @@ async def _transform_response(
 
 async def async_prepare_files_for_prompt(
     hass: HomeAssistant, files: list[tuple[Path, str | None]]
-) -> list[ChatCompletionContentPartImageParam]:
+) -> list[ChatCompletionContentPartParam]:
     """Append files to a prompt.
 
     Caller needs to ensure that the files are allowed.
     """
 
-    def append_files_to_content() -> list[ChatCompletionContentPartImageParam]:
-        content: list[ChatCompletionContentPartImageParam] = []
+    def append_files_to_content() -> list[ChatCompletionContentPartParam]:
+        content: list[ChatCompletionContentPartParam] = []
 
         for file_path, mime_type in files:
             if not file_path.exists():
@@ -206,12 +209,17 @@ async def async_prepare_files_for_prompt(
                 )
 
             base64_file = base64.b64encode(file_path.read_bytes()).decode("utf-8")
-            content.append(
-                {
-                    "type": "image_url",
-                    "image_url": {"url": f"data:{mime_type};base64,{base64_file}"},
-                }
-            )
+            data_url = f"data:{mime_type};base64,{base64_file}"
+            if mime_type == "application/pdf":
+                # Chat Completions accepts PDFs only as "file" parts
+                content.append(
+                    {
+                        "type": "file",
+                        "file": {"filename": file_path.name, "file_data": data_url},
+                    }
+                )
+            else:
+                content.append({"type": "image_url", "image_url": {"url": data_url}})
 
         return content
 
@@ -323,3 +331,6 @@ class OpenCodeEntity(Entity):
             )
             if not chat_log.unresponded_tool_results:
                 break
+        else:
+            LOGGER.error("Stopped after %s tool call iterations", MAX_TOOL_ITERATIONS)
+            raise HomeAssistantError("Too many tool call iterations")

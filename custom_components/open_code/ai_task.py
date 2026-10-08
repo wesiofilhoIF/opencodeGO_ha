@@ -65,6 +65,9 @@ class OpenCodeAITaskEntity(
                 conversation_id=chat_log.conversation_id,
                 data=text,
             )
+        # Models often wrap JSON in a markdown code fence
+        text = text.strip().removeprefix("```json").removeprefix("```")
+        text = text.removesuffix("```").strip()
         try:
             data = json_loads(text)
         except JSONDecodeError as err:

@@ -14,7 +14,11 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Corrigido envio de anexos quando a mensagem do usuário não tem texto, que podia anexar os arquivos à mensagem errada ou gerar `AssertionError`.
 - Corrigido vazamento do cliente HTTP ao descarregar a integração (`client.close` agora é chamado no unload).
 - Declarada a dependência `ai_task` no `manifest.json`, já que a integração importa o componente.
-- Aumentado o requisito mínimo do `openai` para `>=1.99.0`, versão que contém os tipos de tool usados pelo código.
+- Aumentado o requisito mínimo do `openai` para `>=1.99.2`, primeira versão com os tipos de tool usados pelo código.
+- Corrigido envio de PDFs, que agora usam o tipo `file` (a Chat Completions API não aceita PDF em `image_url`).
+- Adicionado `additionalProperties: false` aos schemas de structured output, exigido pelo modo estrito.
+- Corrigida a decodificação de respostas do AI Task envoltas em bloco de código Markdown (` ```json `).
+- Passou a ser lançado erro quando o limite de iterações de ferramentas é atingido, em vez de encerrar silenciosamente.
 
 ### Changed
 - Removido bloco `try/except` que apenas relançava a exceção em `_get_models`.
