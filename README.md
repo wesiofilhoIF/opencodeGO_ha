@@ -123,5 +123,10 @@ logger:
 ## Links
 
 - Repositório: https://github.com/wesiofilhoIF/opencodeGO_ha
+- Changelog: https://github.com/wesiofilhoIF/opencodeGO_ha/blob/main/CHANGELOG.md
 - Documentação OpenCode Go: https://opencode.ai/docs/go
 - Console OpenCode: https://opencode.ai/console
+
+## Histórico de mudanças
+
+Veja o arquivo [CHANGELOG.md](CHANGELOG.md) para o histórico completo de versões e modificações.
