@@ -41,6 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenCodeConfigEntry) -> 
         raise ConfigEntryNotReady(err) from err
 
     entry.runtime_data = client
+    entry.async_on_unload(client.close)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

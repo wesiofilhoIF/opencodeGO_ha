@@ -5,6 +5,24 @@ Todas as alterações notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+
+### Fixed
+- Corrigido erro de API key inválida que aparecia como "Failed to connect" no config flow; agora exibe "Invalid authentication".
+- Corrigido `KeyError` ao converter schemas de ferramentas/structured output sem a chave `type` (ex.: `anyOf`, `enum`).
+- Corrigido erro em ferramentas sem parâmetros, cujos argumentos chegam vazios da API.
+- Corrigido envio de anexos quando a mensagem do usuário não tem texto, que podia anexar os arquivos à mensagem errada ou gerar `AssertionError`.
+- Corrigido vazamento do cliente HTTP ao descarregar a integração (`client.close` agora é chamado no unload).
+- Declarada a dependência `ai_task` no `manifest.json`, já que a integração importa o componente.
+- Aumentado o requisito mínimo do `openai` para `>=1.99.2`, primeira versão com os tipos de tool usados pelo código.
+- Corrigido envio de PDFs, que agora usam o tipo `file` (a Chat Completions API não aceita PDF em `image_url`).
+- Adicionado `additionalProperties: false` aos schemas de structured output, exigido pelo modo estrito.
+- Corrigida a decodificação de respostas do AI Task envoltas em bloco de código Markdown (` ```json `).
+- Passou a ser lançado erro quando o limite de iterações de ferramentas é atingido, em vez de encerrar silenciosamente.
+
+### Changed
+- Removido bloco `try/except` que apenas relançava a exceção em `_get_models`.
+
 ## [1.0.5] - 2026-10-08
 
 ### Added

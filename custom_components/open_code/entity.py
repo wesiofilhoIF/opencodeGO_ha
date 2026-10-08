@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import openai
 from openai.types.chat import (
     ChatCompletionAssistantMessageParam,
-    ChatCompletionContentPartImageParam,
+    ChatCompletionContentPartParam,
     ChatCompletionFunctionToolParam,
     ChatCompletionMessage,
     ChatCompletionMessageFunctionToolCallParam,
@@ -48,20 +48,24 @@ MAX_TOOL_ITERATIONS = 10
 
 def _adjust_schema(schema: dict[str, Any]) -> None:
     """Adjust the schema to be compatible with OpenCode API."""
-    if schema["type"] == "object":
+    if schema.get("type") == "object":
         if "properties" not in schema:
             return
 
         if "required" not in schema:
             schema["required"] = []
 
+        # Strict mode requires every object to forbid extra properties
+        schema["additionalProperties"] = False
+
         for prop, prop_info in schema["properties"].items():
             _adjust_schema(prop_info)
             if prop not in schema["required"]:
-                prop_info["type"] = [prop_info["type"], "null"]
+                if isinstance(prop_info.get("type"), str):
+                    prop_info["type"] = [prop_info["type"], "null"]
                 schema["required"].append(prop)
 
-    elif schema["type"] == "array":
+    elif schema.get("type") == "array":
         if "items" not in schema:
             return
 
@@ -150,6 +154,9 @@ def _convert_content_to_chat_message(
 
 def _decode_tool_arguments(arguments: str) -> Any:
     """Decode tool call arguments."""
+    if not arguments.strip():
+        # Tools without parameters may be called with empty arguments
+        return {}
     try:
         return json.loads(arguments)
     except json.JSONDecodeError as err:
@@ -179,14 +186,14 @@ async def _transform_response(
 
 async def async_prepare_files_for_prompt(
     hass: HomeAssistant, files: list[tuple[Path, str | None]]
-) -> list[ChatCompletionContentPartImageParam]:
+) -> list[ChatCompletionContentPartParam]:
     """Append files to a prompt.
 
     Caller needs to ensure that the files are allowed.
     """
 
-    def append_files_to_content() -> list[ChatCompletionContentPartImageParam]:
-        content: list[ChatCompletionContentPartImageParam] = []
+    def append_files_to_content() -> list[ChatCompletionContentPartParam]:
+        content: list[ChatCompletionContentPartParam] = []
 
         for file_path, mime_type in files:
             if not file_path.exists():
@@ -202,12 +209,17 @@ async def async_prepare_files_for_prompt(
                 )
 
             base64_file = base64.b64encode(file_path.read_bytes()).decode("utf-8")
-            content.append(
-                {
-                    "type": "image_url",
-                    "image_url": {"url": f"data:{mime_type};base64,{base64_file}"},
-                }
-            )
+            data_url = f"data:{mime_type};base64,{base64_file}"
+            if mime_type == "application/pdf":
+                # Chat Completions accepts PDFs only as "file" parts
+                content.append(
+                    {
+                        "type": "file",
+                        "file": {"filename": file_path.name, "file_data": data_url},
+                    }
+                )
+            else:
+                content.append({"type": "image_url", "image_url": {"url": data_url}})
 
         return content
 
@@ -266,18 +278,22 @@ class OpenCodeEntity(Entity):
         last_content = chat_log.content[-1]
 
         if last_content.role == "user" and last_content.attachments:
-            last_message: ChatCompletionMessageParam = model_args["messages"][-1]
-            assert last_message["role"] == "user" and isinstance(
-                last_message["content"], str
-            )
             files = await async_prepare_files_for_prompt(
                 self.hass,
                 [(a.path, a.mime_type) for a in last_content.attachments],
             )
-            last_message["content"] = [
-                {"type": "text", "text": last_message["content"]},
-                *files,
-            ]
+            user_message = ChatCompletionUserMessageParam(
+                role="user",
+                content=[
+                    {"type": "text", "text": last_content.content or ""},
+                    *files,
+                ],
+            )
+            # A user message without text is not converted, so it has to be appended
+            if last_content.content:
+                model_args["messages"][-1] = user_message
+            else:
+                model_args["messages"].append(user_message)
 
         if structure:
             if TYPE_CHECKING:
@@ -315,3 +331,6 @@ class OpenCodeEntity(Entity):
             )
             if not chat_log.unresponded_tool_results:
                 break
+        else:
+            LOGGER.error("Stopped after %s tool call iterations", MAX_TOOL_ITERATIONS)
+            raise HomeAssistantError("Too many tool call iterations")

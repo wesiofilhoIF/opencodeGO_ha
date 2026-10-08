@@ -4,11 +4,11 @@
   "after_dependencies": ["assist_pipeline", "intent"],
   "codeowners": ["@wesiofilhoIF"],
   "config_flow": true,
-  "dependencies": ["conversation"],
+  "dependencies": ["ai_task", "conversation"],
   "documentation": "https://github.com/wesiofilhoIF/opencodeGO_ha",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/wesiofilhoIF/opencodeGO_ha/issues",
-  "requirements": ["openai>=1.0.0"],
+  "requirements": ["openai>=1.99.2"],
   "version": "1.0.5"
 }
