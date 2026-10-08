@@ -7,15 +7,9 @@ The code is based on the official Open Router component.
 
 Place the `custom_components` folder in your configuration directory (or add its contents to an existing `custom_components` folder). Alternatively install via [HACS](https://hacs.xyz/).
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=wesiofilhoIF&repository=opencodeGO_ha&category=integration)
-
 ## Configuration
 
-To add the **OpenCode** service to your Home Assistant instance, use this My button:
-
-[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=open_code)
-
-Manual configuration steps:
+To add the **OpenCode** service to your Home Assistant instance:
 
 1. Browse to your Home Assistant instance.
 2. Go to **Settings > Devices & services**.
