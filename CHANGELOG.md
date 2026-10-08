@@ -5,6 +5,11 @@ Todas as alterações notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.0.5] - 2026-10-08
+
+### Added
+- Adicionado `CHANGELOG.md` com histórico completo de modificações.
+
 ## [1.0.4] - 2026-10-08
 
 ### Changed
@@ -24,7 +29,6 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ### Added
 - Adicionado header `x-opencode-session` nas requisições de chat, conforme recomendado pela documentação do OpenCode Go.
 - Adicionado `.gitignore` para excluir `__pycache__`, arquivos `.pyc` e configurações de IDEs.
-- Adicionado este `CHANGELOG.md`.
 
 ### Fixed
 - Corrigida divergência de URL em `__init__.py`, que ainda usava o endpoint antigo `/zen/v1` hardcoded.
@@ -38,4 +42,6 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ---
 
+[1.0.5]: https://github.com/wesiofilhoIF/opencodeGO_ha/releases/tag/v1.0.5
 [1.0.4]: https://github.com/wesiofilhoIF/opencodeGO_ha/releases/tag/v1.0.4
+[1.0.3]: https://github.com/airy10/opencode_ha/releases/tag/v1.0.3
