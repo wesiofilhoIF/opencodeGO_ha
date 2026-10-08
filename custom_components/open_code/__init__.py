@@ -9,13 +9,11 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
-from .const import LOGGER
+from .const import LOGGER, OPENCODE_BASE_URL
 
 PLATFORMS = [Platform.AI_TASK, Platform.CONVERSATION]
 
 type OpenCodeConfigEntry = ConfigEntry[AsyncOpenAI]
-
-OPENCODE_BASE_URL = "https://opencode.ai/zen/v1"
 
 
 def _create_client(api_key: str) -> AsyncOpenAI:
