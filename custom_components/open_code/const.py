@@ -8,7 +8,7 @@ from homeassistant.helpers import llm
 DOMAIN = "open_code"
 LOGGER = logging.getLogger(__package__)
 
-OPENCODE_BASE_URL = "https://opencode.ai/zen/v1"
+OPENCODE_BASE_URL = "https://opencode.ai/zen/go/v1"
 
 CONF_RECOMMENDED = "recommended"
 

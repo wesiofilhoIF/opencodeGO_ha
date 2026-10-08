@@ -13,7 +13,7 @@
                     "api_key": "API key"
                 },
                 "data_description": {
-                    "api_key": "An OpenCode API key"
+                    "api_key": "An OpenCode Go API key"
                 }
             }
         }
