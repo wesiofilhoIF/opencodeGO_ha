@@ -5,7 +5,7 @@ Todas as alterações notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
-## [Não lançado]
+## [1.0.41] - 2026-10-08
 
 ### Fixed
 - Corrigido erro de API key inválida que aparecia como "Failed to connect" no config flow; agora exibe "Invalid authentication".
@@ -60,6 +60,7 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ---
 
+[1.0.41]: https://github.com/wesiofilhoIF/opencodeGO_ha/releases/tag/v1.0.41
 [1.0.5]: https://github.com/wesiofilhoIF/opencodeGO_ha/releases/tag/v1.0.5
 [1.0.4]: https://github.com/wesiofilhoIF/opencodeGO_ha/releases/tag/v1.0.4
 [1.0.3]: https://github.com/airy10/opencode_ha/releases/tag/v1.0.3
