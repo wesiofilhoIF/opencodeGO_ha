@@ -69,7 +69,7 @@ class OpenCodeConfigFlow(ConfigFlow, domain=DOMAIN):
                 async for _ in client.with_options(timeout=10.0).models.list():
                     break
             except openai.AuthenticationError:
-                errors["base"] = "cannot_connect"
+                errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -103,14 +103,11 @@ class OpenCodeSubentryFlowHandler(ConfigSubentryFlow):
             base_url=OPENCODE_BASE_URL,
             api_key=entry.data[CONF_API_KEY],
         )
-        try:
-            models_response = await client.models.list()
-            self.models = {
-                model.id: {"id": model.id, "name": model.id, "supported_parameters": []}
-                for model in models_response.data
-            }
-        except openai.OpenAIError:
-            raise
+        models_response = await client.models.list()
+        self.models = {
+            model.id: {"id": model.id, "name": model.id, "supported_parameters": []}
+            for model in models_response.data
+        }
 
 
 class ConversationFlowHandler(OpenCodeSubentryFlowHandler):

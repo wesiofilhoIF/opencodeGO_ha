@@ -48,7 +48,7 @@ MAX_TOOL_ITERATIONS = 10
 
 def _adjust_schema(schema: dict[str, Any]) -> None:
     """Adjust the schema to be compatible with OpenCode API."""
-    if schema["type"] == "object":
+    if schema.get("type") == "object":
         if "properties" not in schema:
             return
 
@@ -58,10 +58,11 @@ def _adjust_schema(schema: dict[str, Any]) -> None:
         for prop, prop_info in schema["properties"].items():
             _adjust_schema(prop_info)
             if prop not in schema["required"]:
-                prop_info["type"] = [prop_info["type"], "null"]
+                if isinstance(prop_info.get("type"), str):
+                    prop_info["type"] = [prop_info["type"], "null"]
                 schema["required"].append(prop)
 
-    elif schema["type"] == "array":
+    elif schema.get("type") == "array":
         if "items" not in schema:
             return
 
@@ -150,6 +151,9 @@ def _convert_content_to_chat_message(
 
 def _decode_tool_arguments(arguments: str) -> Any:
     """Decode tool call arguments."""
+    if not arguments.strip():
+        # Tools without parameters may be called with empty arguments
+        return {}
     try:
         return json.loads(arguments)
     except json.JSONDecodeError as err:
@@ -266,18 +270,22 @@ class OpenCodeEntity(Entity):
         last_content = chat_log.content[-1]
 
         if last_content.role == "user" and last_content.attachments:
-            last_message: ChatCompletionMessageParam = model_args["messages"][-1]
-            assert last_message["role"] == "user" and isinstance(
-                last_message["content"], str
-            )
             files = await async_prepare_files_for_prompt(
                 self.hass,
                 [(a.path, a.mime_type) for a in last_content.attachments],
             )
-            last_message["content"] = [
-                {"type": "text", "text": last_message["content"]},
-                *files,
-            ]
+            user_message = ChatCompletionUserMessageParam(
+                role="user",
+                content=[
+                    {"type": "text", "text": last_content.content or ""},
+                    *files,
+                ],
+            )
+            # A user message without text is not converted, so it has to be appended
+            if last_content.content:
+                model_args["messages"][-1] = user_message
+            else:
+                model_args["messages"].append(user_message)
 
         if structure:
             if TYPE_CHECKING:
