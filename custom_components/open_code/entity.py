@@ -243,8 +243,6 @@ class OpenCodeEntity(Entity):
             "model": self.model,
             "user": chat_log.conversation_id,
             "extra_headers": {
-                "X-Title": "Home Assistant",
-                "HTTP-Referer": "https://www.home-assistant.io/integrations/open_code",
                 "x-opencode-session": chat_log.conversation_id,
             },
         }
