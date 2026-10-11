@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import openai
 from openai.types.chat import (
     ChatCompletionAssistantMessageParam,
-    ChatCompletionContentPartImageParam,
+    ChatCompletionContentPartParam,
     ChatCompletionFunctionToolParam,
     ChatCompletionMessage,
     ChatCompletionMessageFunctionToolCallParam,
@@ -48,7 +48,8 @@ MAX_TOOL_ITERATIONS = 10
 
 def _adjust_schema(schema: dict[str, Any]) -> None:
     """Adjust the schema to be compatible with OpenCode API."""
-    if schema["type"] == "object":
+    schema_type = schema.get("type")
+    if schema_type == "object":
         if "properties" not in schema:
             return
 
@@ -58,10 +59,14 @@ def _adjust_schema(schema: dict[str, Any]) -> None:
         for prop, prop_info in schema["properties"].items():
             _adjust_schema(prop_info)
             if prop not in schema["required"]:
-                prop_info["type"] = [prop_info["type"], "null"]
+                prop_type = prop_info.get("type")
+                if prop_type is not None:
+                    types = prop_type if isinstance(prop_type, list) else [prop_type]
+                    if "null" not in types:
+                        prop_info["type"] = [*types, "null"]
                 schema["required"].append(prop)
 
-    elif schema["type"] == "array":
+    elif schema_type == "array":
         if "items" not in schema:
             return
 
@@ -179,14 +184,14 @@ async def _transform_response(
 
 async def async_prepare_files_for_prompt(
     hass: HomeAssistant, files: list[tuple[Path, str | None]]
-) -> list[ChatCompletionContentPartImageParam]:
+) -> list[ChatCompletionContentPartParam]:
     """Append files to a prompt.
 
     Caller needs to ensure that the files are allowed.
     """
 
     def append_files_to_content() -> list[ChatCompletionContentPartImageParam]:
-        content: list[ChatCompletionContentPartImageParam] = []
+        content: list[ChatCompletionContentPartParam] = []
 
         for file_path, mime_type in files:
             if not file_path.exists():
@@ -202,12 +207,16 @@ async def async_prepare_files_for_prompt(
                 )
 
             base64_file = base64.b64encode(file_path.read_bytes()).decode("utf-8")
-            content.append(
-                {
-                    "type": "image_url",
-                    "image_url": {"url": f"data:{mime_type};base64,{base64_file}"},
-                }
-            )
+            data_uri = f"data:{mime_type};base64,{base64_file}"
+            if mime_type == "application/pdf":
+                content.append(
+                    {
+                        "type": "file",
+                        "file": {"filename": file_path.name, "file_data": data_uri},
+                    }
+                )
+            else:
+                content.append({"type": "image_url", "image_url": {"url": data_uri}})
 
         return content
 
@@ -294,9 +303,24 @@ class OpenCodeEntity(Entity):
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
                 result = await client.chat.completions.create(**model_args)
+            except openai.APIStatusError as err:
+                LOGGER.error("Error talking to API: %s", err)
+                if err.status_code in (402, 429):
+                    raise HomeAssistantError(
+                        "OpenCode Go quota or rate limit reached "
+                        f"(HTTP {err.status_code}): {err.message}"
+                    ) from err
+                if err.status_code in (401, 403):
+                    raise HomeAssistantError(
+                        f"OpenCode Go rejected the API key or plan (HTTP {err.status_code}): "
+                        f"{err.message}"
+                    ) from err
+                raise HomeAssistantError(
+                    f"Error talking to API (HTTP {err.status_code}): {err.message}"
+                ) from err
             except openai.OpenAIError as err:
                 LOGGER.error("Error talking to API: %s", err)
-                raise HomeAssistantError("Error talking to API") from err
+                raise HomeAssistantError(f"Error talking to API: {err}") from err
 
             if not result.choices:
                 LOGGER.error("API returned empty choices")

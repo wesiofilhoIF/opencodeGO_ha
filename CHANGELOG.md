@@ -5,6 +5,17 @@ Todas as alterações notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [1.0.6] - 2026-10-11
+
+### Added
+- Mensagens de erro distintas para cota/limite (HTTP 402/429), chave ou plano rejeitado (HTTP 401/403) e demais erros HTTP, incluindo o texto devolvido pela API (ex.: exigência de Privacy = Global).
+- Erro `invalid_auth` no config flow para chave inválida, separado de `cannot_connect`.
+
+### Fixed
+- `_adjust_schema` não gera mais `KeyError` em propriedades sem `type` nem duplica `null` quando o `type` já é uma lista (AI Task com saída estruturada).
+- PDFs anexados agora são enviados como parte `file` em vez de `image_url`.
+- Requisito mínimo do `openai` elevado para `>=1.99.2`, exigido pelos tipos usados no código.
+
 ## [1.0.5] - 2026-10-08
 
 ### Added
@@ -42,6 +53,7 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ---
 
+[1.0.6]: https://github.com/wesiofilhoIF/opencodeGO_ha/releases/tag/v1.0.6
 [1.0.5]: https://github.com/wesiofilhoIF/opencodeGO_ha/releases/tag/v1.0.5
 [1.0.4]: https://github.com/wesiofilhoIF/opencodeGO_ha/releases/tag/v1.0.4
 [1.0.3]: https://github.com/airy10/opencode_ha/releases/tag/v1.0.3

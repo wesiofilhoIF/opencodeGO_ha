@@ -68,7 +68,9 @@ class OpenCodeConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 async for _ in client.with_options(timeout=10.0).models.list():
                     break
-            except openai.AuthenticationError:
+            except (openai.AuthenticationError, openai.PermissionDeniedError):
+                errors["base"] = "invalid_auth"
+            except openai.OpenAIError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
